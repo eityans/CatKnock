@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/k0kubun/pp/v3"
 )
 
 func pingHandler(c *gin.Context) {
@@ -11,6 +12,7 @@ func pingHandler(c *gin.Context) {
 }
 
 func callbackHandler(c *gin.Context) {
+	pp.Print(c.Request)
 	c.JSON(200, gin.H{
 			"message": "aaa",
 	})
