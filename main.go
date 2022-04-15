@@ -56,6 +56,6 @@ func callbackHandler(c *gin.Context) {
 func main() {
 	router := gin.Default()
 	router.GET("/ping", pingHandler)
-	router.GET("/callback", callbackHandler)
+	router.POST("/callback", callbackHandler)
 	router.Run()
 }
