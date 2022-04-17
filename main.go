@@ -15,6 +15,7 @@ func pingHandler(c *gin.Context) {
 	})
 }
 
+// https://github.com/line/line-bot-sdk-go/blob/master/examples/echo_bot/server.go
 func callbackHandler(c *gin.Context) {
 	bot, err := linebot.New(
 		os.Getenv("CHANNEL_SECRET"),
