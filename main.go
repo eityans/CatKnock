@@ -11,7 +11,7 @@ import (
 
 func pingHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
-			"message": "ここをキャンプ地とする",
+		"message": "ここをキャンプ地とする",
 	})
 }
 
