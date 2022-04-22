@@ -1,11 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"github.com/line/line-bot-sdk-go/v7/linebot"
 )
 
@@ -54,7 +57,28 @@ func callbackHandler(c *gin.Context) {
 
 }
 
+func loadEnv() {
+	if os.Getenv("ENV") == "production" { return }
+	err := godotenv.Load(".env")
+	if err != nil {
+		panic("Error loading .env file")
+	}
+}
+
 func main() {
+	loadEnv()
+
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	router := gin.Default()
 	router.GET("/ping", pingHandler)
 	router.POST("/callback", callbackHandler)
