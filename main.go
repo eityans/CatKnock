@@ -1,17 +1,15 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"catknock/infrastructure"
 	"catknock/model"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-gorp/gorp"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/line/line-bot-sdk-go/v7/linebot"
 )
@@ -63,7 +61,7 @@ func callbackHandler(c *gin.Context) {
 
 // https://qiita.com/lanevok/items/dbf591a3916070fcba0d
 func usersHandler(c *gin.Context) {
-	dbMap := initDb()
+	dbMap := infrastructure.GetDb()
 	var users []model.User
 	_, err := dbMap.Select(&users, `SELECT id, name, age FROM users`)
 	if err != nil {
@@ -75,32 +73,8 @@ func usersHandler(c *gin.Context) {
 	})
 }
 
-func initDb() *gorp.DbMap {
-	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	dbMap := &gorp.DbMap{Db: db, Dialect: gorp.PostgresDialect{}}
-	dbMap.AddTableWithName(model.User{}, "users")
-
-	err = dbMap.CreateTablesIfNotExists()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return dbMap
- }
-
-func loadEnv() {
-	if os.Getenv("ENV") == "production" { return }
-	err := godotenv.Load(".env")
-	if err != nil {
-		panic("Error loading .env file")
-	}
-}
-
 func main() {
-	loadEnv()
+	infrastructure.LoadEnv()
 
 	router := gin.Default()
 	router.LoadHTMLGlob("templates/*.tmpl")
