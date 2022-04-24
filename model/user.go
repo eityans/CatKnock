@@ -1,7 +1,7 @@
 package model
 
 type User struct {
-	Id int
-	Name string
-	Age int
+	Id int `db:"id"`
+	Name string `db:"name"`
+	Age int `db:"age"`
 }
