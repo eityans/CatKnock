@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-gorp/gorp"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/line/line-bot-sdk-go/v7/linebot"
@@ -75,6 +76,41 @@ func testHandler(c *gin.Context) {
 	})
 }
 
+type User struct {
+	Id int
+	Name string
+	Age int
+}
+
+func usersHandler(c *gin.Context) {
+	dbMap := initDb()
+	var users []User
+	_, err := dbMap.Select(&users, `SELECT id, name, age FROM users`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	c.HTML(http.StatusOK, "users.tmpl", gin.H{
+		"users": users,
+	})
+}
+
+func initDb() *gorp.DbMap {
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbMap := &gorp.DbMap{Db: db, Dialect: gorp.PostgresDialect{}}
+	dbMap.AddTableWithName(User{}, "users")
+
+	err = dbMap.CreateTablesIfNotExists()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return dbMap
+ }
+
 func loadEnv() {
 	if os.Getenv("ENV") == "production" { return }
 	err := godotenv.Load(".env")
@@ -86,41 +122,11 @@ func loadEnv() {
 func main() {
 	loadEnv()
 
-	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	// err = db.Ping()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// _, err = db.Exec(`INSERT INTO users(name, age) VALUES($1, $2)`, "Bob", 18)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	rows, err := db.Query(`SELECT id, name, age FROM users ORDER BY NAME`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	for rows.Next() {
-		var id int64
-		var name string
-		var age int64
-		err = rows.Scan(&id, &name, &age)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(id, name, age)
-	}
-
 	router := gin.Default()
 	router.LoadHTMLGlob("templates/*.tmpl")
 	router.GET("/ping", pingHandler)
 	router.GET("/test", testHandler)
+	router.GET("/users", usersHandler)
 	router.POST("/callback", callbackHandler)
 	router.Run()
 }

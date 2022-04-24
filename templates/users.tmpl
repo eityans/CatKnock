@@ -1,0 +1,13 @@
+<html>
+  {{/* コメント*/}}
+
+  <ul>
+    {{
+      range.users
+    }}
+    <li>{{.Id}} {{.Name}} {{.Age}}</li>
+    {{
+      end
+    }}
+  </ul>
+</html>
