@@ -1,13 +1,15 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
+	"catknock/infrastructure"
+	"catknock/model"
+
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/line/line-bot-sdk-go/v7/linebot"
 )
@@ -57,30 +59,27 @@ func callbackHandler(c *gin.Context) {
 
 }
 
-func loadEnv() {
-	if os.Getenv("ENV") == "production" { return }
-	err := godotenv.Load(".env")
+// https://qiita.com/lanevok/items/dbf591a3916070fcba0d
+func usersHandler(c *gin.Context) {
+	dbMap := infrastructure.GetDb()
+	var users []model.User
+	_, err := dbMap.Select(&users, `SELECT id, name, age FROM users`)
 	if err != nil {
-		panic("Error loading .env file")
+		log.Fatal(err)
 	}
+
+	c.HTML(http.StatusOK, "users.tmpl", gin.H{
+		"users": users,
+	})
 }
 
 func main() {
-	loadEnv()
-
-	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
+	infrastructure.LoadEnv()
 
 	router := gin.Default()
+	router.LoadHTMLGlob("templates/*.tmpl")
 	router.GET("/ping", pingHandler)
+	router.GET("/users", usersHandler)
 	router.POST("/callback", callbackHandler)
 	router.Run()
 }
