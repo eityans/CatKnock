@@ -2,12 +2,8 @@
   {{/* コメント*/}}
 
   <ul>
-    {{
-      range.users
-    }}
+    {{ range.users }}
     <li>{{.Id}} {{.Name}} {{.Age}}</li>
-    {{
-      end
-    }}
+    {{ end }
   </ul>
 </html>
