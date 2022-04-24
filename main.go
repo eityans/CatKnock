@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	"catknock/model"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-gorp/gorp"
 	"github.com/joho/godotenv"
@@ -59,32 +61,10 @@ func callbackHandler(c *gin.Context) {
 
 }
 
-type C struct {
-  Id int
-  Name string
-}
-
-func testHandler(c *gin.Context) {
-	c.HTML(http.StatusOK, "test.tmpl", gin.H{
-		"a": "a",
-		"b": []string{"b_todo1","b_todo2"},
-		"c": []C{{1,"c_mika"},{2,"c_risa"}},
-		"d": C{3,"d_mayu"},
-		"e": true,
-		"f": false,
-		"h": true,
-	})
-}
-
-type User struct {
-	Id int
-	Name string
-	Age int
-}
-
+// https://qiita.com/lanevok/items/dbf591a3916070fcba0d
 func usersHandler(c *gin.Context) {
 	dbMap := initDb()
-	var users []User
+	var users []model.User
 	_, err := dbMap.Select(&users, `SELECT id, name, age FROM users`)
 	if err != nil {
 		log.Fatal(err)
@@ -102,7 +82,7 @@ func initDb() *gorp.DbMap {
 	}
 
 	dbMap := &gorp.DbMap{Db: db, Dialect: gorp.PostgresDialect{}}
-	dbMap.AddTableWithName(User{}, "users")
+	dbMap.AddTableWithName(model.User{}, "users")
 
 	err = dbMap.CreateTablesIfNotExists()
 	if err != nil {
@@ -125,7 +105,6 @@ func main() {
 	router := gin.Default()
 	router.LoadHTMLGlob("templates/*.tmpl")
 	router.GET("/ping", pingHandler)
-	router.GET("/test", testHandler)
 	router.GET("/users", usersHandler)
 	router.POST("/callback", callbackHandler)
 	router.Run()
