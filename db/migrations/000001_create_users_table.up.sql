@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS users(
+  id serial PRIMARY KEY,
+  name VARCHAR (100) UNIQUE NOT NULL
+  age INTEGER
+);
