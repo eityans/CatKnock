@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -57,6 +58,23 @@ func callbackHandler(c *gin.Context) {
 
 }
 
+type C struct {
+  Id int
+  Name string
+}
+
+func testHandler(c *gin.Context) {
+	c.HTML(http.StatusOK, "test.tmpl", gin.H{
+		"a": "a",
+		"b": []string{"b_todo1","b_todo2"},
+		"c": []C{{1,"c_mika"},{2,"c_risa"}},
+		"d": C{3,"d_mayu"},
+		"e": true,
+		"f": false,
+		"h": true,
+	})
+}
+
 func loadEnv() {
 	if os.Getenv("ENV") == "production" { return }
 	err := godotenv.Load(".env")
@@ -74,13 +92,35 @@ func main() {
 	}
 	defer db.Close()
 
-	err = db.Ping()
+	// err = db.Ping()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// _, err = db.Exec(`INSERT INTO users(name, age) VALUES($1, $2)`, "Bob", 18)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	rows, err := db.Query(`SELECT id, name, age FROM users ORDER BY NAME`)
 	if err != nil {
 		log.Fatal(err)
 	}
+	for rows.Next() {
+		var id int64
+		var name string
+		var age int64
+		err = rows.Scan(&id, &name, &age)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(id, name, age)
+	}
 
 	router := gin.Default()
+	router.LoadHTMLGlob("templates/*.tmpl")
 	router.GET("/ping", pingHandler)
+	router.GET("/test", testHandler)
 	router.POST("/callback", callbackHandler)
 	router.Run()
 }
